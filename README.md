@@ -85,7 +85,6 @@ CustomerVariables
 │   ├── name              References ValueModel.variables[].name
 │   ├── value             Estimated numeric value for this customer
 │   ├── confidence        0–1 confidence score
-│   ├── sources[]         Integer IDs referencing entries in sources_summary
 │   └── triangulation_notes  How this estimate was derived or cross-checked
 │
 ├── value_drivers[]       Per-driver applicability assessment
@@ -96,18 +95,12 @@ CustomerVariables
 │       ├── execution_risk         0–1 probability that value won't be realized
 │       └── attribution_percentage  0–100% attributable to this solution
 │
-├── sources_summary[]     Indexed evidence registry
-│   ├── id                Integer key referenced by sources[] arrays
-│   ├── title / url
-│   ├── variables_supported[]  Variable names this source supports
-│   └── notes             What the source says and how it was used
-│
 └── missing_variables[]   Variables that couldn't be estimated, with reasons
 ```
 
 **What this schema computes:** Given a `ValueModel` and a `CustomerVariables` instance, a value tool substitutes variable estimates into each selected driver's equation, applies `execution_risk` and `attribution_percentage` to arrive at risk-adjusted attributed value per driver, and sums across selected drivers to produce total quantified value. Comparing that total to the proposed price establishes ROI and payback period.
 
-The `sources_summary` registry — with integer IDs cited by both `variables[].sources` and `value_drivers[].risk_adjustments.sources` — makes every figure traceable to evidence.
+
 
 **Relationship to `ValueModel`:** `variables[].name` references `ValueModel.variables[].name`; `value_drivers[].name` references `ValueModel.value_drivers[].name`. The `ValueModel` provides the structure and equations; `CustomerVariables` provides the customer-specific inputs.
 
@@ -140,7 +133,7 @@ Both schemas are designed as structured output targets for LLMs:
 
 **Building a `ValueModel`:** Provide the LLM with product documentation and ask it to produce a `ValueModel` instance as a structured output. Key guidance: equations must use only declared variable names; `key_category_metric_equation` must also use only declared variables; improvement claims should express percentages as percents (not decimals) in descriptions; `tiers_or_modules` should reference entries in `tiers_and_modules`.
 
-**Building `CustomerVariables`:** Provide the LLM with a `ValueModel` instance plus customer research (website, reports, press releases, call notes) and ask it to produce a `CustomerVariables` instance. Key guidance: every variable estimate must cite at least one `sources_summary` entry; `execution_risk` and `attribution_percentage` must be explicit for every selected driver; `missing_variables` should document anything that couldn't be estimated.
+**Building `CustomerVariables`:** Provide the LLM with a `ValueModel` instance plus customer research (website, reports, press releases, call notes) and ask it to produce a `CustomerVariables` instance. Key guidance: `execution_risk` and `attribution_percentage` must be explicit for every selected driver; `missing_variables` should document anything that couldn't be estimated.
 
 ## Publishing a Value Model Page
 

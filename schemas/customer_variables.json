@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CustomerVariables",
+  "description": "Customer-specific variable estimates and value driver applicability for a given ValueModel. Variable estimates reference an indexed sources registry for traceability. Implementations may extend this schema with additional top-level properties (e.g. market fit, pain points, technical context) provided the core variable, driver, and sources structures are preserved.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "customer": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The name of the customer or prospect."
+    },
+    "variables": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Estimated values for each variable defined in the referenced ValueModel. Every estimate must cite at least one source from sources_summary.",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "References ValueModel.variables[].name."
+          },
+          "value": {
+            "type": "number",
+            "description": "The estimated numeric value of this variable for this customer."
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Confidence in the estimate, expressed as a 0\u20131 score."
+          },
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "integer"
+            },
+            "description": "Integer IDs referencing an optional sources registry. Omit if no source tracking is used."
+          },
+          "triangulation_notes": {
+            "type": "string",
+            "description": "Explanation of how this estimate was derived, cross-checked, or triangulated across sources."
+          }
+        },
+        "required": [
+          "name",
+          "value",
+          "confidence",
+          "sources",
+          "triangulation_notes"
+        ]
+      }
+    },
+    "value_drivers": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Applicability assessment for each value driver defined in the referenced ValueModel.",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "References ValueModel.value_drivers[].name."
+          },
+          "selected": {
+            "type": "boolean",
+            "description": "True if this driver applies to this customer; false if excluded."
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Explanation of why this driver was selected or excluded for this customer."
+          },
+          "risk_adjustments": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Adjustments that scale the driver's raw equation output to reflect real-world risk and attribution.",
+            "properties": {
+              "execution_risk": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Probability (0\u20131) that the customer will not fully realize this value. Applied as a multiplier: realized_value = equation_value * (1 - execution_risk)."
+              },
+              "attribution_percentage": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Percentage of the driver's value attributable to this solution (vs. other factors, initiatives, or vendors). Applied as: attributed_value = realized_value * (attribution_percentage / 100)."
+              },
+              "justification": {
+                "type": "string",
+                "description": "Narrative explaining the basis for the execution_risk and attribution_percentage values."
+              },
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "description": "Integer IDs referencing an optional sources registry. Omit if no source tracking is used."
+              }
+            },
+            "required": [
+              "execution_risk",
+              "attribution_percentage"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "selected",
+          "reason",
+          "risk_adjustments"
+        ]
+      }
+    },
+    "missing_variables": {
+      "type": "array",
+      "description": "Variables from the ValueModel that could not be estimated, with reasons. Useful for flagging data gaps and guiding discovery conversations.",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "References ValueModel.variables[].name."
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why this variable could not be estimated."
+          }
+        },
+        "required": [
+          "name",
+          "reason"
+        ]
+      }
+    }
+  },
+  "required": [
+    "customer",
+    "variables",
+    "value_drivers"
+  ]
+}
