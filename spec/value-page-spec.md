@@ -1,5 +1,9 @@
 # Value Model Page Specification
 
+Version: 1.0.0-draft
+Status: In progress
+License: CC BY 4.0 — see /LICENSE-CC.md
+
 **The Value Project — value-models**
 
 This document specifies the structure of a machine-readable value model page that publishes a vendor's `ValueModel` JSON in a form that both humans and LLMs can reliably read, verify, and reason about.
