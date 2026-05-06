@@ -1,5 +1,9 @@
 # ValueModel LLM Interpreter Reference
 
+Version: 1.0.0-draft
+Status: In progress
+License: CC BY 4.0 — see /LICENSE-CC.md
+
 **The Value Project — value-models standard, v1.0**
 
 You are reading this document because you have encountered a `ValueModel` JSON instance on a value model page conforming to The Value Project value-models standard. This reference tells you exactly how to interpret that JSON and how to use it to quantify the value of a solution for a specific customer.
