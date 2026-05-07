@@ -2,18 +2,31 @@
 
 **JSON schemas for B2B value modeling and customer value quantification.**
 
-Part of [The Value Project](https://github.com/the-value-project) — open schemas for the full B2B commercial lifecycle.
-
----
+Part of [The Value Project](https://github.com/The-Value-Project) — open schemas for the full B2B commercial lifecycle.
 
 ## Overview
 
 This repository contains two interoperable JSON schemas that together represent how a B2B vendor understands and communicates the economic value of their solution:
 
-- **`ValueModel`** — the canonical product-level model of what a solution is worth and to whom: variables, equations, value drivers, and tiers/modules
-- **`CustomerVariables`** — a customer-specific instantiation: variable estimates with evidence sources, value driver applicability, and risk adjustments (execution risk + attribution percentage)
+| Schema | File | Version | License | Purpose |
+|---|---|---|---|---|
+| `ValueModel` | `schemas/value_model.json` | 1.0.0 | Apache-2.0 | Product-level value proposition: variables, equations, value drivers, tiers/modules |
+| `CustomerVariables` | `schemas/customer_variables.json` | 1.0.0 | Apache-2.0 | Customer-specific instantiation: variable estimates, driver applicability, risk adjustments |
 
-These schemas are the foundation of value-based selling. They are designed to be produced by LLMs (using structured output / tool use), consumed by sales enablement tools, and linked to pricing models to recommend appropriate deal configurations.
+Specifications and documentation in `spec/` are licensed under **CC BY 4.0**.
+
+> **Related repo:** [`pricing-models`](https://github.com/The-Value-Project/pricing-models) — PricingModel, DealConfiguration, and InvoiceStatement schemas that these value schemas feed into.
+
+---
+
+## Licensing
+
+| Content | License | SPDX | Full text |
+|---|---|---|---|
+| JSON schemas (`schemas/`) | Apache License 2.0 | `Apache-2.0` | [LICENSE-CODE](LICENSE-CODE) |
+| Specifications and docs (`spec/`, `README.md`, `examples/`) | Creative Commons Attribution 4.0 | `CC-BY-4.0` | [LICENSE-DOCS](LICENSE-DOCS) |
+
+See [LICENSE](LICENSE) for the dual-license overview and attribution guidance.
 
 ---
 
@@ -27,162 +40,200 @@ The Canonical Value Model (CVM) defines the full value proposition of a product 
 
 ```
 ValueModel
-├── variables[]           All variables used in value driver equations
-│   ├── name              JavaScript-safe identifier
-│   ├── display_name      Human-readable label
-│   ├── description       How to determine this variable's value
-│   ├── type              Money | Numeric | Percentage
-│   └── category          Solution Variable | Improvement Claim |
-│                         Market Variable | Customer Variable
+├── schema_version            "1.0.0"
+├── model_id                  Stable unique identifier (referenced by CustomerVariables.model_id)
+├── product_name / product_description
 │
-├── dependencies[]        Derived variable relationships
-│   ├── variable          Name of the dependent variable
-│   └── equation          JavaScript expression computing it from other variables
+├── variables[]               All inputs used in value driver equations
+│   ├── name                  JavaScript-safe identifier
+│   ├── display_name          Human-readable label
+│   ├── description           How to estimate this variable for a customer
+│   ├── type                  Money | Numeric | Percentage
+│   └── category              Solution Variable | Improvement Claim |
+│                             Market Variable | Customer Variable
 │
-├── value_drivers[]       Economic impact calculations for each driver
-│   ├── name / number / category / subcategory
-│   ├── equation          JavaScript expression → economic impact in currency
-│   ├── description       What this driver does
-│   ├── variables_used[]  Variable names used in the equation
-│   ├── continuity_profile  one_time or recurring (with decay rate and time horizon)
-│   ├── tiers_or_modules[]  Which tiers/modules enable this driver
-│   ├── key_category_metric  Observable metric tracked to verify realized value
-│   └── key_category_metric_equation  JavaScript expression for that metric
+├── dependencies[]            Derived variable relationships
+│   ├── variable              Name of the dependent variable
+│   └── equation              JavaScript expression computing it from other variables
 │
-└── tiers_and_modules[]   Catalog of subscription tiers and add-on modules
-    ├── name / module (boolean) / description
-    └── includes[]        Other tiers/modules included in this one
+├── value_drivers[]           Economic impact calculations
+│   ├── name                  Unique driver name (referenced by CustomerVariables.value_drivers[].name)
+│   ├── equation              JavaScript expression → economic impact in currency
+│   ├── description           Plain-language explanation of value created
+│   ├── variables_used[]      Variable names used in the equation
+│   ├── continuity_profile    one_time or recurring (decay rate + time horizon)
+│   ├── tiers_or_modules[]    Tiers/modules that unlock this driver
+│   ├── key_category_metric   Observable post-sale tracking metric
+│   └── key_category_metric_equation  JavaScript expression for the metric
+│
+└── tiers_and_modules[]       Catalog of subscription tiers and add-on modules
+    ├── name                  Must match corresponding name in PricingModel (pricing-models repo)
+    ├── module                true = add-on module; false = subscription tier
+    ├── description
+    └── includes[]            Other tiers/modules included in this one
 ```
 
 **Variable categories:**
 
 | Category | Description |
-|----------|-------------|
+|---|---|
 | `Solution Variable` | A property of the vendor's solution (e.g., accuracy rate, response time) |
 | `Improvement Claim` | The improvement the solution delivers (e.g., % reduction in manual effort) |
 | `Market Variable` | A property of the customer's market context (e.g., average deal size) |
 | `Customer Variable` | A property of the specific customer (e.g., number of sales reps) |
 
-**Value driver continuity profiles:** Each driver declares whether it provides a `one_time` or `recurring` benefit. If recurring, `annual_decay_rate` and `time_horizon_years` define how the impact evolves over time.
+**Continuity profiles:** `one_time` or `recurring`. Recurring drivers carry `annual_decay_rate` and `time_horizon_years` for multi-year ROI calculations.
 
-**Key category metrics:** `key_category_metric` and `key_category_metric_equation` define the observable metric that should be tracked post-sale to verify that predicted value was actually realized — separating the predicted impact (the driver `equation`) from the measurable outcome.
+**Key category metrics:** `key_category_metric` and `key_category_metric_equation` define the observable outcome tracked post-sale to verify value was realized — separating predicted impact from measurable outcome.
 
-**Relation to pricing:** The `tiers_or_modules` field on each value driver links directly to the `tiers_and_modules` catalog, allowing a value model to answer: *"Which tier does a customer need to unlock this driver?"*
+**Cross-reference to pricing:** `tiers_or_modules[]` on each driver links by name to `tiers_and_modules[]`, which corresponds to tier/module names in the PricingModel schema. This is the join between value models and pricing models.
 
 ---
 
 ### `CustomerVariables` — `schemas/customer_variables.json`
 
-A customer-specific instantiation of a value model. This schema captures the minimum required to quantify economic value for a specific prospect: estimates for each model variable, applicability and risk adjustments for each driver, and an indexed evidence registry that makes every estimate traceable.
+A customer-specific instantiation of a ValueModel.
 
 **Top-level structure:**
 
 ```
 CustomerVariables
-├── customer              Customer name
+├── schema_version            "1.0.0"
+├── customer_id               Stable unique identifier
+├── customer                  Customer name
+├── model_id                  References ValueModel.model_id
 │
-├── variables[]           Variable value estimates — inputs to value driver equations
-│   ├── name              References ValueModel.variables[].name
-│   ├── value             Estimated numeric value for this customer
-│   ├── confidence        0–1 confidence score
-│   └── triangulation_notes  How this estimate was derived or cross-checked
+├── variables[]               Variable estimates for this customer
+│   ├── name                  References ValueModel.variables[].name
+│   ├── value                 Estimated numeric value
+│   ├── confidence            0–1 confidence score
+│   └── triangulation_notes   How this estimate was derived
 │
-├── value_drivers[]       Per-driver applicability assessment
-│   ├── name              References ValueModel.value_drivers[].name
-│   ├── selected          true if this driver applies; false if excluded
-│   ├── reason            Why this driver was selected or excluded
+├── value_drivers[]           Per-driver applicability
+│   ├── name                  References ValueModel.value_drivers[].name
+│   ├── selected              true = included; false = excluded
+│   ├── reason                Why selected or excluded
 │   └── risk_adjustments
-│       ├── execution_risk         0–1 probability that value won't be realized
-│       └── attribution_percentage  0–100% attributable to this solution
+│       ├── execution_risk         0–1 probability value won't be realized
+│       └── attribution_percentage 0–100% attributable to this solution
 │
-└── missing_variables[]   Variables that couldn't be estimated, with reasons
+└── missing_variables[]       Variables that couldn't be estimated, with reasons
 ```
 
-**What this schema computes:** Given a `ValueModel` and a `CustomerVariables` instance, a value tool substitutes variable estimates into each selected driver's equation, applies `execution_risk` and `attribution_percentage` to arrive at risk-adjusted attributed value per driver, and sums across selected drivers to produce total quantified value. Comparing that total to the proposed price establishes ROI and payback period.
-
-
-
-**Relationship to `ValueModel`:** `variables[].name` references `ValueModel.variables[].name`; `value_drivers[].name` references `ValueModel.value_drivers[].name`. The `ValueModel` provides the structure and equations; `CustomerVariables` provides the customer-specific inputs.
+**What this computes:** Substituting variable estimates into selected driver equations, applying `execution_risk` and `attribution_percentage`, and summing across selected drivers produces total risk-adjusted attributed value. Comparing to proposed price establishes ROI and payback period.
 
 ---
 
-## How They Work Together
+## How the Schemas Relate
 
 ```
-ValueModel
-  defines: variables, equations, drivers, key metrics, tiers
+ValueModel (this repo)
+  defines: variables, equations, drivers, tiers/modules, key metrics
       │
-      │  CustomerVariables provides estimates for each variable
-      │  and selects + risk-adjusts applicable drivers
+      │  CustomerVariables provides customer-specific inputs
+      │  and selects/risk-adjusts applicable drivers
       ▼
-CustomerVariables
-  computes (via engine): risk-adjusted value per driver
-                         total quantified value
-                         ROI vs. proposed price
-                         recommended tier (via tiers_or_modules)
-                         post-sale tracking metrics (via key_category_metric)
+CustomerVariables (this repo)
+  computes: risk-adjusted value per driver
+            total quantified value + ROI
+            recommended tier (via tiers_or_modules[])
+            post-sale tracking metrics
+                    │
+                    │  Recommended tier_id feeds DealConfiguration
+                    ▼
+PricingModel + DealConfiguration (pricing-models repo)
+  computes: InvoiceStatement
 ```
 
-A pricing engine can then use the recommended tier to select an appropriate `tier_id` in a `DealConfiguration` (see the [`pricing-models`](https://github.com/the-value-project/pricing-models) repo).
+The `tiers_or_modules[]` field on each value driver is the **cross-repo join key**: names here must match `PricingModel.products[].tiers[].name` in the [pricing-models](https://github.com/The-Value-Project/pricing-models) repo.
+
+---
+
+## Specifications
+
+### `spec/value-page-spec.md` — [CC BY 4.0](LICENSE-DOCS)
+
+Specifies the format of a conforming **value model page**: a machine-readable Markdown document wrapping a ValueModel JSON instance with front matter metadata, human-readable descriptions, and a pointer to the LLM interpreter reference. Designed to be read by humans and fetched by LLMs.
+
+### `spec/value-model-llm-reference.md` — [CC BY 4.0](LICENSE-DOCS)
+
+LLM interpreter instructions for the ValueModel JSON. Instructs frontier models how to:
+- Estimate customer variables and build a CustomerVariables instance
+- Evaluate value driver equations and apply continuity profiles
+- Apply execution risk and attribution adjustments
+- Surface key category metrics for post-sale tracking
+- Navigate to the pricing-models repo for deal configuration
+
+This document is linked from every conforming value model page via the `llm_ref` front matter field.
 
 ---
 
 ## LLM Usage
 
-Both schemas are designed as structured output targets for LLMs:
+Both schemas are designed as structured output targets for LLMs.
 
-**Building a `ValueModel`:** Provide the LLM with product documentation and ask it to produce a `ValueModel` instance as a structured output. Key guidance: equations must use only declared variable names; `key_category_metric_equation` must also use only declared variables; improvement claims should express percentages as percents (not decimals) in descriptions; `tiers_or_modules` should reference entries in `tiers_and_modules`.
+**Building a `ValueModel`:** Provide the LLM with product documentation and the schema as a structured output target. Key guidance:
+- `schema_version` must be `"1.0.0"`
+- All variable `name` values must be JavaScript-safe identifiers
+- Equations reference only declared `variables[].name` values
+- `tiers_or_modules[]` must reference names in `tiers_and_modules[]`
+- `key_category_metric_equation` must use only declared variable names
+- Percentage-type variables are expressed as whole numbers (30 = 30%)
 
-**Building `CustomerVariables`:** Provide the LLM with a `ValueModel` instance plus customer research (website, reports, press releases, call notes) and ask it to produce a `CustomerVariables` instance. Key guidance: `execution_risk` and `attribution_percentage` must be explicit for every selected driver; `missing_variables` should document anything that couldn't be estimated.
-
-## Publishing a Value Model Page
-
-A `ValueModel` JSON instance can be published as a machine-readable value model page — a Markdown document that wraps the JSON with structured human-readable descriptions, front matter metadata, and a pointer to the LLM interpreter reference. The page is designed to be read by both humans (for accuracy review) and LLMs (for value quantification workflows).
-
-Two documents in this repository support this:
-
-- **[`spec/value-page-spec.md`](./spec/value-page-spec.md)** — specifies the format of a conforming value model page, including required front matter fields, a structured human-readable description (variables table, per-driver subsections with equations and key metrics), and the ValueModel JSON block
-- **[`spec/value-model-llm-reference.md`](./spec/value-model-llm-reference.md)** — a prompt-like reference document published alongside value model pages; instructs an LLM how to interpret the ValueModel JSON, compute quantified value for a customer, apply continuity profiles, and surface key category metrics for post-sale tracking
-
-The LLM reference is linked from every conforming value model page via the `llm_ref` front matter field, so any LLM fetching a value model page will find its interpreter instructions automatically.
+**Building `CustomerVariables`:** Provide the LLM with a ValueModel instance and customer research. Key guidance:
+- `model_id` must match the ValueModel instance
+- `execution_risk` and `attribution_percentage` must be set for every selected driver
+- `missing_variables[]` must document anything that couldn't be estimated
 
 ---
+
 ## File Structure
 
 ```
 value-models/
-├── README.md
+├── LICENSE                           Dual-license overview + attribution
+├── LICENSE-CODE                      Apache 2.0 (full text) — applies to schemas/
+├── LICENSE-DOCS                      CC BY 4.0 (full text) — applies to spec/, docs
+├── README.md                         This file (CC BY 4.0)
+├── CONTRIBUTING.md                   Contribution guide (CC BY 4.0)
+├── CHANGELOG.md                      Version history (CC BY 4.0)
 ├── schemas/
-│   ├── value_model.json              ValueModel schema (JSON Schema Draft-07)
-│   └── customer_variables.json       CustomerVariables schema (JSON Schema Draft-07)
+│   ├── value_model.json              ValueModel schema v1.0.0 (Apache-2.0)
+│   └── customer_variables.json       CustomerVariables schema v1.0.0 (Apache-2.0)
 ├── spec/
-│   ├── value-page-spec.md            Specification for machine-readable value model pages
-│   └── value-model-llm-reference.md  LLM interpreter reference for ValueModel JSON
-├── examples/
-│   ├── value_model_example.json
-│   └── customer_variables_example.json
-└── CHANGELOG.md
+│   ├── value-page-spec.md            Value model page specification v1.0.0 (CC BY 4.0)
+│   └── value-model-llm-reference.md  LLM interpreter reference v1.0.0 (CC BY 4.0)
+└── examples/
+    ├── value_model_example.json      Worked example ValueModel instance
+    └── customer_variables_example.json  Worked example CustomerVariables instance
 ```
 
 ---
 
-## Versioning & Status
+## Versioning
 
 | Schema | Version | Status |
-|--------|---------|--------|
-| `ValueModel` | 1.0 | Implementation-Ready |
-| `CustomerVariables` | 1.0 | Implementation-Ready |
+|---|---|---|
+| `ValueModel` | 1.0.0 | Implementation-Ready |
+| `CustomerVariables` | 1.0.0 | Implementation-Ready |
 
-Both schemas use JSON Schema Draft-07 and `additionalProperties: true` throughout, supporting implementation extensions while preserving the required core structure.
+Versions follow `MAJOR.MINOR.PATCH` (semver). Breaking changes (invalidating existing conforming instances) increment MAJOR. Additive backward-compatible changes increment MINOR. The `schema_version` field in each JSON instance must match the schema version.
+
+---
+
+## Contributing
+
+We welcome feedback on schemas, specifications, and implementation experience. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening issues or pull requests.
 
 ---
 
 ## Related
 
-- [`pricing-models`](https://github.com/the-value-project/pricing-models) — PricingModel, DealConfiguration, InvoiceStatement schemas
-- [The Value Project](https://github.com/the-value-project) — org overview and cross-schema relationships
+- [`pricing-models`](https://github.com/The-Value-Project/pricing-models) — PricingModel, DealConfiguration, InvoiceStatement schemas + computation spec
+- [The Value Project](https://github.com/The-Value-Project) — org overview and cross-schema relationships
 - [ValueIQ](https://valueiq.ai) — the team behind this work
 
 ---
 
-*Part of [The Value Project](https://github.com/the-value-project) by [ValueIQ](https://valueiq.ai).*
+*Part of [The Value Project](https://github.com/The-Value-Project) by [ValueIQ](https://valueiq.ai)*
+*Schemas: [Apache-2.0](LICENSE-CODE) · Docs: [CC BY 4.0](LICENSE-DOCS)*
