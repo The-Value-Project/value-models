@@ -1,8 +1,14 @@
-# Value Model Page Specification
-
-Version: 1.0.0-draft
-Status: In progress
-License: CC BY 4.0 — see /LICENSE-CC.md
+---
+license: "CC-BY-4.0"
+license_url: "https://creativecommons.org/licenses/by/4.0/"
+license_full_text: "LICENSE-DOCS"
+copyright: "Copyright 2026 The Value Project (an initiative by ValueIQ — https://valueiq.ai)"
+version: "1.0.0"
+repo: "https://github.com/The-Value-Project/value-models"
+related_schema: "https://github.com/The-Value-Project/value-models/blob/main/schemas/value_model.json"
+related_llm_reference: "https://github.com/The-Value-Project/value-models/blob/main/spec/value-model-llm-reference.md"
+related_pricing_page_spec: "https://github.com/The-Value-Project/pricing-models/blob/main/spec/pricing-page-spec.md"
+part_of: "The Value Project — https://github.com/The-Value-Project"
 
 **The Value Project — value-models**
 
@@ -266,3 +272,6 @@ A value model page conforms to this specification if:
 **Pairing with a pricing page:** A value model page is most useful when published alongside a conforming pricing page. Together they allow an LLM to quantify value and compute the price of the appropriate configuration.
 
 **Segment-specific models:** If you maintain separate value models for different customer segments, publish one value model page per segment and use the `segment` front matter field to disambiguate.
+
+---
+*License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · Copyright 2026 The Value Project (an initiative by [ValueIQ](https://valueiq.ai)) · Part of [The Value Project](https://github.com/The-Value-Project/value-models)*
