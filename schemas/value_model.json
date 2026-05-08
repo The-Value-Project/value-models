@@ -1,218 +1,209 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/The-Value-Project/value-models/blob/main/schemas/value_model.json",
   "title": "ValueModel",
-  "description": "Canonical Value Model (CVM) \u2014 defines variables, dependencies, value drivers, and tiers/modules for a product's value proposition. Implementations may extend the top-level object and any item with additional fields (e.g. competitive positioning, impact narratives, LLM build notes) without breaking conformance.",
+  "description": "Canonical Value Model (CVM) v1.0.0 — defines the full value proposition of a B2B product in a computable, structured form: variables, equations, value drivers, continuity profiles, key category metrics, and tier/module catalog. Part of The Value Project open standard. Schema: Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0). Copyright 2026 The Value Project (https://github.com/The-Value-Project/value-models).",
+  "x-license": {
+    "spdx": "Apache-2.0",
+    "url": "https://www.apache.org/licenses/LICENSE-2.0",
+    "copyright": "Copyright 2026 The Value Project (an initiative by ValueIQ — https://valueiq.ai)",
+    "full-text": "LICENSE-CODE",
+    "repo": "https://github.com/The-Value-Project/value-models"
+  },
+  "x-version": "1.0.0",
+  "x-schema-type": "ValueModel",
+  "x-part-of": "The Value Project — https://github.com/The-Value-Project",
+  "x-related-schemas": {
+    "CustomerVariables": "https://github.com/The-Value-Project/value-models/blob/main/schemas/customer_variables.json",
+    "PricingModel": "https://github.com/The-Value-Project/pricing-models/blob/main/schemas/pricing_model.json",
+    "DealConfiguration": "https://github.com/The-Value-Project/pricing-models/blob/main/schemas/deal_configuration.json"
+  },
   "type": "object",
+  "required": ["schema_version", "model_id", "product_name", "variables", "value_drivers", "tiers_and_modules"],
   "additionalProperties": true,
   "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "Version of the ValueModel schema this instance conforms to. Must be '1.0.0'."
+    },
+    "model_id": {
+      "type": "string",
+      "description": "Stable unique identifier for this ValueModel instance. Used by CustomerVariables to reference the model. Example: 'vm_acme_sales_intelligence_v1'."
+    },
+    "product_name": {
+      "type": "string",
+      "description": "Human-readable name of the product or solution this value model describes."
+    },
+    "product_description": {
+      "type": "string",
+      "description": "Brief description of what the product does and the primary problem it solves."
+    },
     "variables": {
       "type": "array",
-      "description": "All variables used by the value drivers.",
+      "description": "All variables used in value driver equations and dependencies. Each variable has a JavaScript-safe name used in equations, a display name for UI, a description explaining how to determine its value, a type, and a category.",
       "items": {
         "type": "object",
+        "required": ["name", "display_name", "description", "type", "category"],
         "additionalProperties": true,
         "properties": {
           "name": {
             "type": "string",
-            "description": "A JavaScript-safe variable name."
+            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+            "description": "JavaScript-safe identifier used in equations. Must match exactly when referenced in value_drivers[].variables_used[] and equations."
           },
           "display_name": {
             "type": "string",
-            "description": "A human-readable descriptive name for this variable."
+            "description": "Human-readable label shown in UI and reports."
           },
           "description": {
             "type": "string",
-            "description": "A description of this variable and how its value can be determined."
+            "description": "How to determine this variable's value for a specific customer. Should be sufficient for an LLM or analyst to estimate it from public sources or a discovery call."
           },
           "type": {
             "type": "string",
-            "enum": [
-              "Money",
-              "Numeric",
-              "Percentage"
-            ],
-            "description": "The value type of this variable."
+            "enum": ["Money", "Numeric", "Percentage"],
+            "description": "Data type. Money = currency amount; Numeric = dimensionless count or rate; Percentage = expressed as a whole number (e.g., 30 means 30%, not 0.3)."
           },
           "category": {
             "type": "string",
-            "enum": [
-              "Solution Variable",
-              "Improvement Claim",
-              "Market Variable",
-              "Customer Variable"
-            ],
-            "description": "Variable category per the value driver taxonomy."
+            "enum": ["Solution Variable", "Improvement Claim", "Market Variable", "Customer Variable"],
+            "description": "Solution Variable: a property of the vendor's solution (e.g., accuracy rate). Improvement Claim: the improvement the solution delivers (e.g., % reduction in manual effort). Market Variable: a property of the customer's market context (e.g., average deal size). Customer Variable: a property of the specific customer (e.g., number of sales reps)."
+          },
+          "unit": {
+            "type": "string",
+            "description": "Optional unit of measure for display purposes (e.g., 'hours/week', 'USD', '%')."
+          },
+          "default_value": {
+            "type": "number",
+            "description": "Optional default or benchmark value used when no customer-specific estimate is available."
           }
-        },
-        "required": [
-          "name",
-          "display_name",
-          "description",
-          "type",
-          "category"
-        ]
+        }
       }
     },
     "dependencies": {
       "type": "array",
-      "description": "Derived variable relationships. Omit if no dependencies exist.",
+      "description": "Derived variable relationships. A dependency defines a variable whose value is computed from other variables via a JavaScript expression, rather than being estimated directly.",
       "items": {
         "type": "object",
+        "required": ["variable", "equation"],
         "additionalProperties": true,
         "properties": {
           "variable": {
             "type": "string",
-            "description": "The name of the dependent variable."
+            "description": "Name of the dependent variable (must match a name in variables[])."
           },
           "equation": {
             "type": "string",
-            "description": "A JavaScript expression computing this variable from other variables in the list."
+            "description": "JavaScript expression computing this variable from other variable names. All referenced names must exist in variables[]."
           }
-        },
-        "required": [
-          "variable",
-          "equation"
-        ]
+        }
       }
     },
     "value_drivers": {
       "type": "array",
-      "description": "The value drivers for this solution. Each driver defines how to calculate the economic impact on a customer.",
+      "description": "Economic impact calculations. Each driver represents one distinct source of value the solution creates, expressed as a JavaScript equation that resolves to a currency amount.",
       "items": {
         "type": "object",
+        "required": ["name", "equation", "description", "variables_used", "continuity_profile", "tiers_or_modules"],
         "additionalProperties": true,
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name of this driver."
+            "description": "Unique name for this value driver. Referenced by CustomerVariables.value_drivers[].name."
           },
           "number": {
             "type": "integer",
-            "description": "Sequence number."
+            "description": "Optional display ordering number."
           },
           "category": {
             "type": "string",
-            "description": "Value driver category per the value driver taxonomy."
+            "description": "High-level category grouping (e.g., 'Efficiency', 'Revenue Growth', 'Risk Reduction')."
           },
           "subcategory": {
             "type": "string",
-            "description": "Value driver subcategory per the value driver taxonomy."
+            "description": "Optional subcategory for finer grouping within category."
           },
           "equation": {
             "type": "string",
-            "description": "A JavaScript expression computing the economic impact of this driver using only variable names declared in variables[]."
+            "description": "JavaScript expression that evaluates to the annual economic impact of this driver in currency units. Must use only variable names declared in variables[]."
           },
           "description": {
             "type": "string",
-            "description": "A description of this value driver and its economic impact."
+            "description": "Plain-language explanation of what this driver measures and why it creates value. Should be sufficient for a non-technical reader to understand."
           },
           "variables_used": {
             "type": "array",
-            "description": "All variable names referenced in this driver's equation.",
-            "items": {
-              "type": "string"
-            }
+            "items": { "type": "string" },
+            "description": "Explicit list of variable names used in the equation. Must be a subset of variables[].name."
           },
           "continuity_profile": {
             "type": "object",
-            "description": "Whether the driver is one-time or recurring and how its impact evolves over time.",
+            "required": ["type"],
             "additionalProperties": true,
+            "description": "Declares whether this driver's value is realized once or recurs over time.",
             "properties": {
-              "mode": {
+              "type": {
                 "type": "string",
-                "enum": [
-                  "one_time",
-                  "recurring"
-                ],
-                "description": "Whether this driver provides a one-time uplift or an ongoing recurring improvement."
+                "enum": ["one_time", "recurring"],
+                "description": "one_time: value is realized in a single period. recurring: value recurs annually, potentially with decay."
               },
               "annual_decay_rate": {
                 "type": "number",
                 "minimum": 0,
                 "maximum": 1,
-                "description": "If recurring, the fractional reduction in benefit each year."
+                "description": "For recurring drivers: fractional reduction in value per year due to diminishing returns, competitive response, etc. 0 = no decay; 0.1 = 10% reduction per year."
               },
               "time_horizon_years": {
                 "type": "integer",
                 "minimum": 1,
-                "description": "If recurring, how many years the effect persists."
+                "description": "For recurring drivers: number of years over which to accumulate value in multi-year ROI calculations."
               }
-            },
-            "required": [
-              "mode"
-            ]
+            }
           },
           "tiers_or_modules": {
             "type": "array",
-            "description": "Which tiers or modules this driver materially depends on. Empty array if solution-wide.",
-            "items": {
-              "type": "string",
-              "description": "Name of a tier or module defined in tiers_and_modules[]."
-            }
+            "items": { "type": "string" },
+            "description": "Names of tiers or modules (from tiers_and_modules[]) that must be purchased to unlock this value driver. References the pricing-models repo's PricingModel.tiers_and_modules[] by name."
           },
           "key_category_metric": {
             "type": "string",
-            "description": "The key metric used to track and verify realized value for this driver post-sale."
+            "description": "The observable metric that should be tracked post-sale to verify this driver's value was actually realized. Separates the predicted impact (equation) from the measurable outcome."
           },
           "key_category_metric_equation": {
             "type": "string",
-            "description": "A JavaScript expression computing the key category metric from declared variables."
+            "description": "JavaScript expression computing the key category metric from declared variables. Must use only variable names in variables[]."
           }
-        },
-        "required": [
-          "category",
-          "continuity_profile",
-          "description",
-          "equation",
-          "key_category_metric",
-          "key_category_metric_equation",
-          "name",
-          "number",
-          "subcategory",
-          "tiers_or_modules",
-          "variables_used"
-        ]
+        }
       }
     },
     "tiers_and_modules": {
       "type": "array",
-      "description": "Catalog of subscription tiers and add-on modules for this solution.",
+      "description": "Catalog of subscription tiers and add-on modules. Names here are referenced by value_drivers[].tiers_or_modules[] and correspond to tier/module names in the PricingModel schema (pricing-models repo).",
       "items": {
         "type": "object",
+        "required": ["name", "module", "description"],
         "additionalProperties": true,
         "properties": {
           "name": {
             "type": "string",
-            "description": "Display name of the tier or module."
+            "description": "Unique name for this tier or module. Must match the corresponding name in the PricingModel schema."
           },
           "module": {
             "type": "boolean",
-            "description": "True = add-on module; false = subscription tier."
+            "description": "true if this is an add-on module; false if it is a subscription tier."
           },
           "description": {
             "type": "string",
-            "description": "Short description of what this tier or module includes."
+            "description": "What capabilities this tier or module includes."
           },
           "includes": {
             "type": "array",
-            "description": "Names of other tiers or modules included in this one.",
-            "items": {
-              "type": "string"
-            }
+            "items": { "type": "string" },
+            "description": "Names of other tiers or modules included in this one. Allows tier hierarchy modeling (e.g., Enterprise includes Professional)."
           }
-        },
-        "required": [
-          "name",
-          "module",
-          "description",
-          "includes"
-        ]
+        }
       }
     }
-  },
-  "required": [
-    "variables",
-    "dependencies",
-    "value_drivers"
-  ]
+  }
 }
