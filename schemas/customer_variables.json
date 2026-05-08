@@ -1,7 +1,21 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/The-Value-Project/value-models/blob/main/schemas/customer_variables.json",
   "title": "CustomerVariables",
-  "description": "Customer-specific variable estimates and value driver applicability for a given ValueModel. Variable estimates reference an indexed sources registry for traceability. Implementations may extend this schema with additional top-level properties (e.g. market fit, pain points, technical context) provided the core variable, driver, and sources structures are preserved.",
+  "description": "Customer-specific variable estimates and value driver applicability for a given ValueModel. Variable estimates reference an indexed sources registry for traceability. Implementations may extend this schema with additional top-level properties (e.g. market fit, pain points, technical context) provided the core variable, driver, and sources structures are preserved. Part of The Value Project open standard. Schema license: Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0). Copyright 2026 The Value Project (https://github.com/The-Value-Project/value-models).",
+  "x-license": {
+    "spdx": "Apache-2.0",
+    "url": "https://www.apache.org/licenses/LICENSE-2.0",
+    "copyright": "Copyright 2026 The Value Project (an initiative by ValueIQ — https://valueiq.ai)",
+    "full-text": "LICENSE-CODE",
+    "repo": "https://github.com/The-Value-Project/value-models"
+  },
+  "x-version": "1.0.0",
+  "x-part-of": "The Value Project — https://github.com/The-Value-Project",
+  "x-related-schemas": {
+    "ValueModel": "https://github.com/The-Value-Project/value-models/blob/main/schemas/value_model.json",
+    "DealConfiguration": "https://github.com/The-Value-Project/pricing-models/blob/main/schemas/deal_configuration.json"
+  },
   "type": "object",
   "additionalProperties": true,
   "properties": {
@@ -31,7 +45,7 @@
             "type": "number",
             "minimum": 0,
             "maximum": 1,
-            "description": "Confidence in the estimate, expressed as a 0\u20131 score."
+            "description": "Confidence in the estimate, expressed as a 0–1 score."
           },
           "sources": {
             "type": "array",
@@ -86,7 +100,7 @@
                 "type": "number",
                 "minimum": 0,
                 "maximum": 1,
-                "description": "Probability (0\u20131) that the customer will not fully realize this value. Applied as a multiplier: realized_value = equation_value * (1 - execution_risk)."
+                "description": "Probability (0–1) that the customer will not fully realize this value. Applied as a multiplier: realized_value = equation_value * (1 - execution_risk)."
               },
               "attribution_percentage": {
                 "type": "number",
