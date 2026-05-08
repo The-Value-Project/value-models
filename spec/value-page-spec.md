@@ -9,6 +9,7 @@ related_schema: "https://github.com/The-Value-Project/value-models/blob/main/sch
 related_llm_reference: "https://github.com/The-Value-Project/value-models/blob/main/spec/value-model-llm-reference.md"
 related_pricing_page_spec: "https://github.com/The-Value-Project/pricing-models/blob/main/spec/pricing-page-spec.md"
 part_of: "The Value Project — https://github.com/The-Value-Project"
+---
 
 **The Value Project — value-models**
 
