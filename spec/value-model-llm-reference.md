@@ -1,8 +1,18 @@
+---
+license: "CC-BY-4.0"
+license_url: "https://creativecommons.org/licenses/by/4.0/"
+license_full_text: "LICENSE-DOCS"
+copyright: "Copyright 2026 The Value Project (an initiative by ValueIQ — https://valueiq.ai)"
+version: "1.0.0"
+repo: "https://github.com/The-Value-Project/value-models"
+related_schema: "https://github.com/The-Value-Project/value-models/blob/main/schemas/value_model.json"
+related_page_spec: "https://github.com/The-Value-Project/value-models/blob/main/spec/value-page-spec.md"
+related_pricing_llm_reference: "https://github.com/The-Value-Project/pricing-models/blob/main/spec/pricing-model-llm-reference.md"
+part_of: "The Value Project — https://github.com/The-Value-Project"
+---
+
 # ValueModel LLM Interpreter Reference
 
-Version: 1.0.0-draft
-Status: In progress
-License: CC BY 4.0 — see /LICENSE-CC.md
 
 **The Value Project — value-models standard, v1.0**
 
@@ -167,3 +177,6 @@ Read `customer_criteria` (if present as an extension field) for explicit criteri
 
 *ValueModel LLM Interpreter Reference — The Value Project, value-models standard v1.0*
 *Published by [ValueIQ](https://valueiq.ai)*
+
+---
+*License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · Copyright 2026 The Value Project (an initiative by [ValueIQ](https://valueiq.ai)) · Part of [The Value Project](https://github.com/The-Value-Project/value-models)*
