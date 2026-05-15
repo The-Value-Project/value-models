@@ -12,6 +12,7 @@ This repository contains two interoperable JSON schemas that together represent 
 |---|---|---|---|---|
 | `ValueModel` | `schemas/value_model.json` | 1.0.0 | Apache-2.0 | Product-level value proposition: variables, equations, value drivers, tiers/modules |
 | `CustomerVariables` | `schemas/customer_variables.json` | 1.0.0 | Apache-2.0 | Customer-specific instantiation: variable estimates, driver applicability, risk adjustments |
+| `BenchmarkClaims` | `schemas/benchmark_claims.json` | 1.0.0 | Apache-2.0 | Vendor-asserted improvement claim benchmarks: median, min, max per claim with evidentiary basis |
 
 Specifications and documentation in `spec/` are licensed under **CC BY 4.0**.
 
@@ -124,14 +125,49 @@ CustomerVariables
 
 ---
 
+### `BenchmarkClaims` — `schemas/benchmark_claims.json`
+
+A companion to the `ValueModel` that publishes the vendor's asserted improvement claim benchmarks. Every variable with `category: "Improvement Claim"` in a `ValueModel` should have a corresponding entry here.
+
+**Top-level structure:**
+
+```
+BenchmarkClaims
+├── schema_version            "1.0.0"
+├── model_id                  References ValueModel.model_id
+├── effective_date            ISO date from which these benchmarks are current
+└── claims[]                  One entry per Improvement Claim variable
+    ├── variable_name         References ValueModel.variables[].name
+    ├── display_name          Human-readable label
+    ├── unit                  '%', ISO currency code, or descriptive label
+    ├── median                Central or most typical observed value
+    ├── min                   Lower bound of the observed range
+    ├── max                   Upper bound of the observed range
+    ├── basis                 customer_data | third_party_research | internal_testing |
+    │                         analyst_estimate | vendor_estimate
+    └── notes                 Caveats, scope limitations, or methodology notes (optional)
+```
+
+**Why separate from `ValueModel`:** Benchmark data changes on a different cadence from model structure — new customer data or revised research can update benchmarks without touching the `ValueModel`. The separation also allows multiple benchmark datasets (e.g. by segment or region) to reference the same `ValueModel`.
+
+**Relationship to `ValueModel`:** `claims[].variable_name` references `ValueModel.variables[].name`. Only variables with `category: "Improvement Claim"` should have entries.
+
+---
+
 ## How the Schemas Relate
 
 ```
 ValueModel (this repo)
   defines: variables, equations, drivers, tiers/modules, key metrics
+      │                                     │
+      │                                     │ Improvement Claim variables
+      │                                     ▼
+      │                             BenchmarkClaims (this repo)
+      │                               median / min / max per claim
+      │                               evidentiary basis classification
       │
-      │  CustomerVariables provides customer-specific inputs
-      │  and selects/risk-adjusts applicable drivers
+      │  CustomerVariables provides customer-specific inputs,
+      │  using BenchmarkClaims medians as defaults for Improvement Claims
       ▼
 CustomerVariables (this repo)
   computes: risk-adjusted value per driver
@@ -180,6 +216,8 @@ Both schemas are designed as structured output targets for LLMs.
 - `key_category_metric_equation` must use only declared variable names
 - Percentage-type variables are expressed as whole numbers (30 = 30%)
 
+**Using `BenchmarkClaims`:** When building a `CustomerVariables` instance, provide the LLM with the `BenchmarkClaims` document alongside the `ValueModel`. The LLM should use `median` as the default value for each `Improvement Claim` variable, adjusting toward `min` or `max` based on customer-specific factors, and note the `basis` classification when reporting estimates.
+
 **Building `CustomerVariables`:** Provide the LLM with a ValueModel instance and customer research. Key guidance:
 - `model_id` must match the ValueModel instance
 - `execution_risk` and `attribution_percentage` must be set for every selected driver
@@ -199,13 +237,15 @@ value-models/
 ├── CHANGELOG.md                      Version history (CC BY 4.0)
 ├── schemas/
 │   ├── value_model.json              ValueModel schema v1.0.0 (Apache-2.0)
-│   └── customer_variables.json       CustomerVariables schema v1.0.0 (Apache-2.0)
+│   ├── customer_variables.json       CustomerVariables schema v1.0.0 (Apache-2.0)
+│   └── benchmark_claims.json         BenchmarkClaims schema v1.0.0 (Apache-2.0)
 ├── spec/
 │   ├── value-page-spec.md            Value model page specification v1.0.0 (CC BY 4.0)
 │   └── value-model-llm-reference.md  LLM interpreter reference v1.0.0 (CC BY 4.0)
 └── examples/
-    ├── value_model_example.json      Worked example ValueModel instance
-    └── customer_variables_example.json  Worked example CustomerVariables instance
+    ├── value_model_example.json         Worked example ValueModel instance
+    ├── customer_variables_example.json  Worked example CustomerVariables instance
+    └── benchmark_claims_example.json    Worked example BenchmarkClaims instance
 ```
 
 ---
@@ -216,6 +256,7 @@ value-models/
 |---|---|---|
 | `ValueModel` | 1.0.0 | Implementation-Ready |
 | `CustomerVariables` | 1.0.0 | Implementation-Ready |
+| `BenchmarkClaims` | 1.0.0 | Implementation-Ready |
 
 Versions follow `MAJOR.MINOR.PATCH` (semver). Breaking changes (invalidating existing conforming instances) increment MAJOR. Additive backward-compatible changes increment MINOR. The `schema_version` field in each JSON instance must match the schema version.
 

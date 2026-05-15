@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BenchmarkClaims",
+  "description": "Vendor-asserted improvement claim benchmarks for a specific ValueModel. Captures median, minimum, and maximum observed or researched values for each Improvement Claim variable in the referenced model. Published alongside the ValueModel to make vendor assertions transparent, human-checkable, and LLM-usable. Implementations may add fields without breaking conformance.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["model_id", "effective_date", "claims"],
+  "properties": {
+    "model_id": {
+      "type": "string",
+      "description": "Identifier of the ValueModel this benchmark data applies to. Should match the identifier used in the value model page front matter."
+    },
+    "effective_date": {
+      "type": "string",
+      "description": "ISO date from which these benchmarks are considered current."
+    },
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "description": "One entry per Improvement Claim variable in the referenced ValueModel. Every variable with category 'Improvement Claim' should have an entry here.",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["variable_name", "display_name", "unit", "median", "min", "max", "basis"],
+        "properties": {
+          "variable_name": {
+            "type": "string",
+            "description": "References ValueModel.variables[].name for a variable with category 'Improvement Claim'."
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Human-readable label for this claim, matching ValueModel.variables[].display_name."
+          },
+          "unit": {
+            "type": "string",
+            "description": "The unit in which median, min, and max are expressed. For Percentage variables use '%'. For Money variables use the ISO 4217 currency code. For Numeric variables use a descriptive label (e.g. 'hours', 'days', 'transactions')."
+          },
+          "median": {
+            "type": "number",
+            "description": "The central or most typical observed value for this improvement claim across the customer base or research corpus."
+          },
+          "min": {
+            "type": "number",
+            "description": "The lower bound of the observed or researched range. Represents outcomes for customers with less favourable conditions."
+          },
+          "max": {
+            "type": "number",
+            "description": "The upper bound of the observed or researched range. Represents outcomes for customers with the most favourable conditions."
+          },
+          "basis": {
+            "type": "string",
+            "enum": [
+              "customer_data",
+              "third_party_research",
+              "internal_testing",
+              "analyst_estimate",
+              "vendor_estimate"
+            ],
+            "description": "The evidentiary basis for this claim. 'customer_data' = measured across actual customers. 'third_party_research' = published external research. 'internal_testing' = controlled internal benchmarks. 'analyst_estimate' = analyst or advisory firm projection. 'vendor_estimate' = vendor's own informed estimate."
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional caveats, scope limitations, or methodology notes for this claim (e.g. 'Based on enterprise segment customers only', 'Measured at 6 months post-implementation')."
+          }
+        }
+      }
+    }
+  }
+}

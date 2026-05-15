@@ -41,6 +41,8 @@ The JSON object has the following top-level arrays. `variables`, `dependencies`,
 | `value_drivers` | array | Economic impact calculations, one per driver |
 | `tiers_and_modules` | array | Catalog of subscription tiers and add-on modules |
 
+A companion `BenchmarkClaims` JSON instance may be present on the same page (look for a fenced `json` block before the ValueModel block, or a `benchmark_claims_ref` field in the page front matter). If present, read it before estimating variable values — see **Improvement Claim Benchmarks** below.
+
 ---
 
 ## Variables
@@ -103,6 +105,40 @@ Use `includes` to determine which drivers apply to a given tier: if a tier inclu
 
 ---
 
+## Improvement Claim Benchmarks
+
+Improvement Claim variables represent the vendor's assertions about what the solution delivers — for example, the percentage reduction in manual effort or the improvement in win rate. These are not customer-specific estimates; they are the vendor's stated performance benchmarks.
+
+A `BenchmarkClaims` document, when present, provides three values for each Improvement Claim variable:
+
+| Field | Meaning |
+|-------|---------|
+| `median` | The central or most typical outcome across the customer base or research corpus |
+| `min` | The lower bound — outcomes for customers with less favourable conditions |
+| `max` | The upper bound — outcomes for customers with the most favourable conditions |
+
+**How to use benchmark values when estimating for a customer:**
+
+- Use `median` as the default value for each Improvement Claim variable
+- Adjust toward `min` when the customer has factors that reduce the benefit (smaller scale, lower maturity, partial adoption)
+- Adjust toward `max` when the customer has factors that amplify the benefit (larger scale, high maturity, strong executive sponsorship)
+- Do not use a value outside `[min, max]` unless the customer provides their own data supporting it
+- If a customer provides measured data for an Improvement Claim variable, use that in preference to the benchmark
+
+**Basis classification:** The `basis` field on each claim indicates its evidentiary foundation. Weight claims accordingly:
+
+| Basis | How to weight |
+|-------|--------------|
+| `customer_data` | Strongest — treat median as a reliable central estimate |
+| `third_party_research` | Strong — treat as externally validated |
+| `internal_testing` | Moderate — controlled conditions may not reflect real-world variation |
+| `analyst_estimate` | Moderate — treat range as wider in practice than stated |
+| `vendor_estimate` | Weakest — treat with scepticism; widen the effective range when in doubt |
+
+If no `BenchmarkClaims` document is present, use the variable `description` field for guidance on typical values and note the absence of benchmark data in any value estimates you produce.
+
+---
+
 ## Computing Value for a Customer
 
 To quantify the value of this solution for a specific customer, you need a `CustomerVariables` document that provides estimated values for each variable. With that document, proceed as follows:
@@ -114,7 +150,7 @@ To quantify the value of this solution for a specific customer, you need a `Cust
 - Does the customer's configuration include the required `tiers_or_modules`?
 If both conditions are met, the driver applies.
 
-**Step 3 — Evaluate each driver equation.** Substitute all variable values (including resolved dependencies) into the `equation`. The result is the raw predicted economic impact.
+**Step 3 — Evaluate each driver equation.** Substitute all variable values (including resolved dependencies) into the `equation`. For `Improvement Claim` variables, use benchmark values from the `BenchmarkClaims` document as defaults (see **Improvement Claim Benchmarks** above), adjusted for customer-specific factors. The result is the raw predicted economic impact.
 
 **Step 4 — Apply risk adjustments.** From the `CustomerVariables` document, for each selected driver:
 - Multiply by `(1 - execution_risk)` to get realized value
@@ -153,7 +189,10 @@ Review the `value_drivers` array. For each driver, read `description` and `drive
 Find the tier or module name in `tiers_and_modules`. Find all drivers where `tiers_or_modules` contains that name, or where `tiers_or_modules` is empty (applies to all).
 
 **"What variables do I need to estimate to quantify value for this customer?"**
-List all `variables` with `category` of `Customer Variable` or `Market Variable`. These require customer-specific research. `Solution Variable` and `Improvement Claim` variables are vendor-supplied defaults.
+List all `variables` with `category` of `Customer Variable` or `Market Variable` — these require customer-specific research. `Solution Variable` values are fixed properties of the solution. `Improvement Claim` variables have vendor-asserted benchmark values in the `BenchmarkClaims` document; use `median` as the default and adjust based on customer context.
+
+**"What improvement does the vendor claim for [variable]?"**
+Find the variable in the `BenchmarkClaims` document by `variable_name`. Report `median` as the typical outcome, `min` as the conservative case, and `max` as the optimistic case. State the `basis` so the reader can assess credibility. Include any `notes` caveats.
 
 **"How much of this value is recurring vs. one-time?"**
 Group drivers by `continuity_profile.mode`. Sum attributed values separately for `one_time` and `recurring` groups.
@@ -171,6 +210,7 @@ Read `customer_criteria` (if present as an extension field) for explicit criteri
 - **Customer-specific variable estimates** — those live in a `CustomerVariables` document
 - **Risk adjustments** — execution risk and attribution are set per-customer in `CustomerVariables`
 - **Pricing** — use the paired `PricingModel` for price computation
+- **Improvement claim benchmarks** — those live in the companion `BenchmarkClaims` document; if absent from the page, no vendor benchmark data is available
 - **Competitive claims** — competitive positioning may appear as extension fields but is not part of the standard schema
 
 ---

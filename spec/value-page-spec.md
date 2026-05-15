@@ -55,6 +55,7 @@ vendor: <vendor name>
 product: <product name>
 category: <the product category this model is designed for>
 effective_date: <ISO date>
+benchmark_claims_ref: <URL of the BenchmarkClaims JSON for this model>
 ---
 ```
 
@@ -65,6 +66,8 @@ value_model_url: <canonical URL of this document>
 segment: <target customer segment, if model is segment-specific>
 contact: <contact email or URL for value discussions>
 ```
+
+Note: `benchmark_claims_ref` is required when the model contains any `Improvement Claim` variables.
 
 ### 2. Page Title
 
@@ -81,7 +84,10 @@ A clearly marked block directing an LLM to the interpreter reference before proc
 > The Value Project value-models standard (v1.0). Before interpreting the JSON below,
 > read the interpreter reference at the `llm_ref` URL in the front matter. The human-readable
 > description in this document is a structured narrative summary of the JSON — use it to
-> validate your interpretation of the JSON, not as a substitute for it.
+> validate your interpretation of the JSON, not as a substitute for it. The Improvement Claim
+> Benchmarks section contains the vendor's asserted median, minimum, and maximum values for
+> each Improvement Claim variable — use these as default values when estimating those variables
+> for a specific customer unless customer-specific data is available.
 ```
 
 ### 4. Human-Readable Model Description
@@ -131,7 +137,27 @@ One subsection per value driver, structured as follows:
 
 This structure allows a human reviewer to verify: that the equation uses only the declared variables, that the key metric is a plausible real-world observable, that the impact type is correctly characterized, and that the description matches the equation.
 
-#### 4d. Tiers and Modules
+#### 4d. Improvement Claim Benchmarks
+
+A table listing the vendor's asserted benchmark values for every variable with category `Improvement Claim` in the model. This section is required when `benchmark_claims_ref` is present in the front matter. Values MUST match the companion `BenchmarkClaims` JSON instance at that URL.
+
+| Variable | Display Name | Basis | Min | Median | Max | Unit | Notes |
+|----------|-------------|-------|-----|--------|-----|------|-------|
+| [variable_name] | [display_name] | [basis] | [min] | [median] | [max] | [unit] | [notes or —] |
+
+The `basis` field indicates the evidentiary foundation for the claim:
+
+| Basis | Meaning |
+|-------|---------|
+| `customer_data` | Measured across actual customers |
+| `third_party_research` | Published external research |
+| `internal_testing` | Controlled internal benchmarks |
+| `analyst_estimate` | Analyst or advisory firm projection |
+| `vendor_estimate` | Vendor's own informed estimate |
+
+This table is the primary human-checkable artifact for vendor claims. Reviewers should verify that median values are defensible, that the range reflects real-world variation, and that the basis classification is accurate. Claims with basis `vendor_estimate` warrant particular scrutiny.
+
+#### 4e. Tiers and Modules
 
 If `tiers_and_modules` is present, a table:
 
@@ -141,7 +167,26 @@ If `tiers_and_modules` is present, a table:
 
 ---
 
-### 5. ValueModel JSON Block
+### 5. BenchmarkClaims JSON Block
+
+The complete, valid `BenchmarkClaims` JSON instance for this model, fenced with the `json` language identifier. Required when `benchmark_claims_ref` is present in the front matter.
+
+````markdown
+```json
+{
+  ...
+}
+```
+````
+
+Requirements:
+- MUST validate against the `BenchmarkClaims` schema at `https://github.com/The-Value-Project/value-models/blob/main/schemas/benchmark_claims.json`
+- `model_id` MUST match the `model_id` in the ValueModel JSON block
+- Every variable with `category: "Improvement Claim"` in the ValueModel MUST have an entry in `claims[]`
+- `variable_name` values MUST resolve to variables in the ValueModel JSON
+- SHOULD be pretty-printed (2-space indent)
+
+### 6. ValueModel JSON Block
 
 The complete, valid `ValueModel` JSON instance, fenced with the `json` language identifier:
 
@@ -160,7 +205,7 @@ Requirements:
 - `tiers_or_modules` entries MUST resolve to entries in `tiers_and_modules`
 - SHOULD be pretty-printed (2-space indent)
 
-### 6. Footer
+### 7. Footer
 
 ```markdown
 ---
@@ -182,6 +227,7 @@ vendor: Acme Corp
 product: Acme AI Platform
 category: AI-assisted sales execution
 effective_date: 2025-01-01
+benchmark_claims_ref: https://acmecorp.com/benchmark-claims.json
 value_model_url: https://acmecorp.com/value-model.md
 ---
 
@@ -191,7 +237,10 @@ value_model_url: https://acmecorp.com/value-model.md
 > The Value Project value-models standard (v1.0). Before interpreting the JSON below,
 > read the interpreter reference at the `llm_ref` URL in the front matter. The human-readable
 > description in this document is a structured narrative summary of the JSON — use it to
-> validate your interpretation of the JSON, not as a substitute for it.
+> validate your interpretation of the JSON, not as a substitute for it. The Improvement Claim
+> Benchmarks section contains the vendor's asserted median, minimum, and maximum values for
+> each Improvement Claim variable — use these as default values when estimating those variables
+> for a specific customer unless customer-specific data is available.
 
 ## Solution Overview
 
@@ -260,11 +309,16 @@ A value model page conforms to this specification if:
 - [ ] The JSON block contains a complete, valid `ValueModel` instance
 - [ ] All variable name cross-references within the JSON resolve correctly
 - [ ] All `tiers_or_modules` references resolve to `tiers_and_modules` entries
+- [ ] If `benchmark_claims_ref` is present: Improvement Claim Benchmarks table is present
+- [ ] If `benchmark_claims_ref` is present: every `Improvement Claim` variable has a row in the benchmarks table
+- [ ] If `benchmark_claims_ref` is present: BenchmarkClaims JSON block is present and `model_id` matches
 - [ ] The footer is present
 
 ---
 
 ## Notes for Publishers
+
+**BenchmarkClaims:** When the model contains `Improvement Claim` variables, publish a companion `BenchmarkClaims` JSON instance and set `benchmark_claims_ref` in the front matter. The benchmarks table and JSON block must be kept in sync with that file. An LLM generating a value model page should produce the benchmarks table and BenchmarkClaims JSON simultaneously with the ValueModel JSON.
 
 **Keeping the description in sync:** The human-readable description is derived from the JSON and must be updated whenever the JSON changes. An LLM generating a value model page from a `ValueModel` instance should produce both simultaneously.
 

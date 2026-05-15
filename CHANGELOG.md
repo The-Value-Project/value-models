@@ -50,12 +50,30 @@ License: Apache-2.0
 - `value_drivers[]` — per-driver applicability: `selected`, `reason`, `risk_adjustments` (`execution_risk` 0–1, `attribution_percentage` 0–100)
 - `missing_variables[]` — structured record of variables that couldn't be estimated
 
+### Added — `BenchmarkClaims` schema v1.0.0 (`schemas/benchmark_claims.json`)
+
+License: Apache-2.0
+
+- `schema_version` field (`const: "1.0.0"`)
+- `model_id` — references `ValueModel.model_id`
+- `effective_date` — ISO date from which benchmarks are current
+- `$id`, `x-version`, `x-license`, `x-related-schemas` — license header and cross-repo references
+- `claims[]` — one entry per `Improvement Claim` variable in the referenced `ValueModel`:
+  - `variable_name` — references `ValueModel.variables[].name` (category must be `Improvement Claim`)
+  - `display_name` — human-readable label matching the ValueModel variable
+  - `unit` — `%`, ISO 4217 currency code, or descriptive label
+  - `median` — central or most typical observed value
+  - `min` — lower bound of the observed or researched range
+  - `max` — upper bound of the observed or researched range
+  - `basis` — evidentiary classification: `customer_data` | `third_party_research` | `internal_testing` | `analyst_estimate` | `vendor_estimate`
+  - `notes` — optional caveats, scope limitations, or methodology notes
+
 ### Added — Specifications
 
 License: CC BY 4.0
 
-- `spec/value-page-spec.md` v1.0.0 — specification for machine-readable value model pages: YAML front matter format, human-readable description structure (variables table, per-driver subsections with equations and key metrics), ValueModel JSON block, `llm_ref` pointer requirement
-- `spec/value-model-llm-reference.md` v1.0.0 — LLM interpreter reference: instructions for estimating variables, evaluating driver equations, applying continuity profiles, applying execution risk and attribution, surfacing key category metrics, producing a CustomerVariables instance, navigating to pricing-models for deal configuration
+- `spec/value-page-spec.md` v1.0.0 — specification for machine-readable value model pages: YAML front matter format, human-readable description structure (variables table, Improvement Claim benchmarks table with median/min/max/basis, per-driver subsections with equations and key metrics), BenchmarkClaims JSON block, ValueModel JSON block, `llm_ref` and `benchmark_claims_ref` pointer requirements
+- `spec/value-model-llm-reference.md` v1.0.0 — LLM interpreter reference: instructions for estimating variables (including how to use BenchmarkClaims median/min/max and weight by basis), evaluating driver equations, applying continuity profiles, applying execution risk and attribution, surfacing key category metrics, producing a CustomerVariables instance, navigating to pricing-models for deal configuration
 
 Both spec files include license front matter (YAML) and inline license notices.
 
