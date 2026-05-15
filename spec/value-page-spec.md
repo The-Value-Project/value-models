@@ -3,7 +3,7 @@ license: "CC-BY-4.0"
 license_url: "https://creativecommons.org/licenses/by/4.0/"
 license_full_text: "LICENSE-DOCS"
 copyright: "Copyright 2026 The Value Project (an initiative by ValueIQ — https://valueiq.ai)"
-version: "1.0.0"
+version: "1.1.0"
 repo: "https://github.com/The-Value-Project/value-models"
 related_schema: "https://github.com/The-Value-Project/value-models/blob/main/schemas/value_model.json"
 related_llm_reference: "https://github.com/The-Value-Project/value-models/blob/main/spec/value-model-llm-reference.md"
@@ -106,44 +106,37 @@ One paragraph describing:
 
 #### 4b. Variables
 
-A table listing every variable in the model:
+A table listing every variable in the model, identified by display name:
 
-| Variable | Display Name | Type | Category | Description |
-|----------|-------------|------|----------|-------------|
-| [name] | [display_name] | [type] | [category] | [description] |
+| Display Name | Type | Category | Description |
+|-------------|------|----------|-------------|
+| [display_name] | [type] | [category] | [description — concise, ≤15 words] |
 
 For variables with a dependency (i.e. they appear in `dependencies`), add a note in the description column: *(derived: [equation])*
+
+Descriptions MUST be concise (≤15 words) while preserving the core meaning and any how-to-source guidance. The variable `name` (machine identifier) is not shown in this table — it appears in the ValueModel JSON block.
 
 This table is the primary human-checkable artifact for the variable set. Reviewers should verify that every variable listed here makes sense for the stated solution and customer type, and that `Improvement Claim` values are defensible.
 
 #### 4c. Value Drivers
 
-One subsection per value driver, structured as follows:
+A summary table listing every value driver, one row per driver:
 
-```
-### [number]. [name]
+| # | Name | Category | Applies to | Impact | Key Metric |
+|---|------|----------|------------|--------|------------|
+| [number] | [name] | [category] / [subcategory] | [tiers_or_modules joined by ", ", or "All configurations" if empty] | [One-time or Recurring[, N yr][, X% decay]] | [key_category_metric] |
 
-**Category:** [category] / [subcategory]
-**Applies to:** [tiers_or_modules joined by ", ", or "All configurations" if empty]
-**Impact type:** [one_time or recurring; if recurring: over N years, decay rate X%]
-**Key metric:** [key_category_metric]
-
-[description — verbatim from the JSON]
-
-**Equation:** `[equation]`
-**Key metric equation:** `[key_category_metric_equation]`
-**Variables used:** [variables_used joined by ", "]
-```
-
-This structure allows a human reviewer to verify: that the equation uses only the declared variables, that the key metric is a plausible real-world observable, that the impact type is correctly characterized, and that the description matches the equation.
+This table allows a human reviewer to verify at a glance: the complete set of drivers, their category grouping, which tiers or modules each applies to, whether the impact is one-time or recurring, and the key tracking metric. Full driver detail (equations, descriptions, variables used) is available in the ValueModel JSON block.
 
 #### 4d. Improvement Claim Benchmarks
 
 A table listing the vendor's asserted benchmark values for every variable with category `Improvement Claim` in the model. This section is required when `benchmark_claims_ref` is present in the front matter. Values MUST match the companion `BenchmarkClaims` JSON instance at that URL.
 
-| Variable | Display Name | Basis | Min | Median | Max | Unit | Notes |
-|----------|-------------|-------|-----|--------|-----|------|-------|
-| [variable_name] | [display_name] | [basis] | [min] | [median] | [max] | [unit] | [notes or —] |
+| Display Name | Basis | Min | Median | Max | Unit | Notes |
+|-------------|-------|-----|--------|-----|------|-------|
+| [display_name] | [basis] | [min] | [median] | [max] | [unit] | [notes or —] |
+
+Rows are identified by `display_name`. The variable `name` (machine identifier) is not shown in this table — it appears in the BenchmarkClaims JSON block.
 
 The `basis` field indicates the evidentiary foundation for the claim:
 
@@ -203,6 +196,10 @@ Requirements:
 - MUST be the complete model, not a subset
 - Variable names in `dependencies` and `value_drivers` MUST resolve to entries in `variables`
 - `tiers_or_modules` entries MUST resolve to entries in `tiers_and_modules`
+- Fields with `null` values or empty arrays SHOULD be omitted rather than serialized
+- `variables[]` entries SHOULD omit the `description` field (descriptions appear in the Variables table)
+- `tiers_and_modules[]` entries SHOULD omit the `description` field (descriptions appear in the Tiers and Modules table)
+- Driver `description` fields SHOULD be concise (≤25 words) while preserving the core impact mechanism
 - SHOULD be pretty-printed (2-space indent)
 
 ### 7. Footer
@@ -249,27 +246,22 @@ any scope limitations]
 
 ## Variables
 
-| Variable | Display Name | Type | Category | Description |
-|----------|-------------|------|----------|-------------|
-| ...      | ...         | ...  | ...      | ...         |
+| Display Name | Type | Category | Description |
+|-------------|------|----------|-------------|
+| ...         | ...  | ...      | ...         |
 
 ## Value Drivers
 
-### 1. [Driver Name]
+| # | Name | Category | Applies to | Impact | Key Metric |
+|---|------|----------|------------|--------|------------|
+| 1 | [Driver Name] | [category] / [subcategory] | [tiers or "All configurations"] | [One-time or Recurring] | [key_category_metric] |
+| 2 | [Driver Name] | ... | ... | ... | ... |
 
-**Category:** [category] / [subcategory]
-**Applies to:** [tiers_or_modules or "All configurations"]
-**Impact type:** [one_time / recurring over N years, decay rate X%]
-**Key metric:** [key_category_metric]
+## Improvement Claim Benchmarks
 
-[description verbatim]
-
-**Equation:** `[equation]`
-**Key metric equation:** `[key_category_metric_equation]`
-**Variables used:** [variables_used]
-
-### 2. [Driver Name]
-...
+| Display Name | Basis | Min | Median | Max | Unit | Notes |
+|-------------|-------|-----|--------|-----|------|-------|
+| ...         | ...   | ... | ...    | ... | ...  | ...   |
 
 ## Tiers and Modules
 
@@ -303,14 +295,15 @@ A value model page conforms to this specification if:
 - [ ] `llm_ref` points to a valid LLM interpreter reference
 - [ ] The LLM instruction block appears before the human description and JSON
 - [ ] All required human description subsections are present
-- [ ] Every variable in the JSON appears in the variables table
-- [ ] Every value driver in the JSON has a corresponding subsection with all required fields
-- [ ] Driver descriptions are stated verbatim from the JSON
+- [ ] Every variable in the JSON appears in the Variables table, identified by display name
+- [ ] Variable descriptions in the table are ≤15 words
+- [ ] Every value driver in the JSON has a row in the Value Drivers table
 - [ ] The JSON block contains a complete, valid `ValueModel` instance
 - [ ] All variable name cross-references within the JSON resolve correctly
 - [ ] All `tiers_or_modules` references resolve to `tiers_and_modules` entries
+- [ ] Null fields and empty arrays are omitted from the JSON block
 - [ ] If `benchmark_claims_ref` is present: Improvement Claim Benchmarks table is present
-- [ ] If `benchmark_claims_ref` is present: every `Improvement Claim` variable has a row in the benchmarks table
+- [ ] If `benchmark_claims_ref` is present: every `Improvement Claim` variable has a row in the benchmarks table, identified by display name
 - [ ] If `benchmark_claims_ref` is present: BenchmarkClaims JSON block is present and `model_id` matches
 - [ ] The footer is present
 
@@ -322,7 +315,7 @@ A value model page conforms to this specification if:
 
 **Keeping the description in sync:** The human-readable description is derived from the JSON and must be updated whenever the JSON changes. An LLM generating a value model page from a `ValueModel` instance should produce both simultaneously.
 
-**Reviewer guidance:** The variables table is the primary accuracy checkpoint — pay particular attention to `Improvement Claim` variables, which embed the vendor's assertions about solution performance. The per-driver subsections allow reviewers to sanity-check equations and key metrics independently.
+**Reviewer guidance:** The Variables table is the primary accuracy checkpoint — pay particular attention to `Improvement Claim` variables, which embed the vendor's assertions about solution performance. The Value Drivers table allows reviewers to verify the complete driver set, tier applicability, and key metrics at a glance; full equation and description detail is in the ValueModel JSON block.
 
 **Pairing with a pricing page:** A value model page is most useful when published alongside a conforming pricing page. Together they allow an LLM to quantify value and compute the price of the appropriate configuration.
 
