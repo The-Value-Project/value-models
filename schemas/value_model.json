@@ -2,16 +2,16 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/The-Value-Project/value-models/blob/main/schemas/value_model.json",
   "title": "ValueModel",
-  "description": "Canonical Value Model (CVM) — defines variables, dependencies, value drivers, and tiers/modules for a product's value proposition. Implementations may extend the top-level object and any item with additional fields (e.g. competitive positioning, impact narratives, LLM build notes) without breaking conformance. Part of The Value Project open standard. Schema license: Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0). Copyright 2026 The Value Project (https://github.com/The-Value-Project/value-models).",
+  "description": "Canonical Value Model (CVM) \u2014 defines variables, dependencies, value drivers, and tiers/modules for a product's value proposition. Implementations may extend the top-level object and any item with additional fields (e.g. competitive positioning, impact narratives, LLM build notes) without breaking conformance. Part of The Value Project open standard. Schema license: Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0). Copyright 2026 The Value Project (https://github.com/The-Value-Project/value-models).",
   "x-license": {
     "spdx": "Apache-2.0",
     "url": "https://www.apache.org/licenses/LICENSE-2.0",
-    "copyright": "Copyright 2026 The Value Project (an initiative by ValueIQ — https://valueiq.ai)",
+    "copyright": "Copyright 2026 The Value Project (an initiative by ValueIQ \u2014 https://valueiq.ai)",
     "full-text": "LICENSE-CODE",
     "repo": "https://github.com/The-Value-Project/value-models"
   },
   "x-version": "1.0.0",
-  "x-part-of": "The Value Project — https://github.com/The-Value-Project",
+  "x-part-of": "The Value Project \u2014 https://github.com/The-Value-Project",
   "x-related-schemas": {
     "CustomerVariables": "https://github.com/The-Value-Project/value-models/blob/main/schemas/customer_variables.json",
     "PricingModel": "https://github.com/The-Value-Project/pricing-models/blob/main/schemas/pricing_model.json",
@@ -172,12 +172,17 @@
           "key_category_metric_equation": {
             "type": "string",
             "description": "A JavaScript expression computing the key category metric from declared variables."
+          },
+          "customer_criteria": {
+            "type": "string",
+            "description": "Plain-language description of the customer characteristics, conditions, or context required for this driver to apply. Allows a buyer to self-assess applicability without interpreting the equation."
           }
         },
         "required": [
           "category",
           "continuity_profile",
           "description",
+          "customer_criteria",
           "equation",
           "key_category_metric",
           "key_category_metric_equation",

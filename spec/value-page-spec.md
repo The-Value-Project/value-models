@@ -122,11 +122,11 @@ This table is the primary human-checkable artifact for the variable set. Reviewe
 
 A summary table listing every value driver, one row per driver:
 
-| # | Name | Category | Applies to | Impact | Key Metric |
-|---|------|----------|------------|--------|------------|
-| [number] | [name] | [category] / [subcategory] | [tiers_or_modules joined by ", ", or "All configurations" if empty] | [One-time or Recurring[, N yr][, X% decay]] | [key_category_metric] |
+| # | Name | Category | Applies to | Impact | Key Metric | Applies to customers who |
+|---|------|----------|------------|--------|------------|-------------------------|
+| [number] | [name] | [category] / [subcategory] | [tiers_or_modules joined by ", ", or "All configurations" if empty] | [One-time or Recurring[, N yr][, X% decay]] | [key_category_metric] | [customer_criteria] |
 
-This table allows a human reviewer to verify at a glance: the complete set of drivers, their category grouping, which tiers or modules each applies to, whether the impact is one-time or recurring, and the key tracking metric. Full driver detail (equations, descriptions, variables used) is available in the ValueModel JSON block.
+This table allows a human reviewer to verify at a glance: the complete set of drivers, their category grouping, which tiers or modules each applies to, whether the impact is one-time or recurring, the key tracking metric, and who each driver applies to. Full driver detail (equations, descriptions, variables used) is available in the ValueModel JSON block.
 
 #### 4d. Improvement Claim Benchmarks
 
@@ -252,10 +252,10 @@ any scope limitations]
 
 ## Value Drivers
 
-| # | Name | Category | Applies to | Impact | Key Metric |
-|---|------|----------|------------|--------|------------|
-| 1 | [Driver Name] | [category] / [subcategory] | [tiers or "All configurations"] | [One-time or Recurring] | [key_category_metric] |
-| 2 | [Driver Name] | ... | ... | ... | ... |
+| # | Name | Category | Applies to | Impact | Key Metric | Applies to customers who |
+|---|------|----------|------------|--------|------------|-------------------------|
+| 1 | [Driver Name] | [category] / [subcategory] | [tiers or "All configurations"] | [One-time or Recurring] | [key_category_metric] | [customer_criteria] |
+| 2 | [Driver Name] | ... | ... | ... | ... | ... |
 
 ## Improvement Claim Benchmarks
 
@@ -297,7 +297,7 @@ A value model page conforms to this specification if:
 - [ ] All required human description subsections are present
 - [ ] Every variable in the JSON appears in the Variables table, identified by display name
 - [ ] Variable descriptions in the table are ≤15 words
-- [ ] Every value driver in the JSON has a row in the Value Drivers table
+- [ ] Every value driver in the JSON has a row in the Value Drivers table with all columns including `customer_criteria`
 - [ ] The JSON block contains a complete, valid `ValueModel` instance
 - [ ] All variable name cross-references within the JSON resolve correctly
 - [ ] All `tiers_or_modules` references resolve to `tiers_and_modules` entries

@@ -90,6 +90,8 @@ Each value driver defines how to calculate the economic impact of the solution o
 
 **`key_category_metric` and `key_category_metric_equation`** — the observable metric that should be tracked post-sale to verify that predicted value was actually realized. The `key_category_metric_equation` is a JavaScript expression, using the same declared variables, that computes this metric. This is distinct from the driver `equation`: the driver equation computes *predicted economic impact*; the key category metric equation computes *what to measure in the real world*.
 
+**`customer_criteria`** — a plain-language description of the customer characteristics, conditions, or context required for this driver to apply. Read this field to assess whether a specific customer qualifies for the driver before evaluating its equation.
+
 **`tiers_or_modules`** — which tiers or modules from `tiers_and_modules` this driver requires. An empty array means the driver applies to all configurations. A non-empty array means the driver's value is only realized if the customer has selected at least one of the listed tiers or modules.
 
 ---
@@ -183,7 +185,7 @@ These metrics form the basis of a value realization review and should be include
 ## Answering Common Questions
 
 **"What value does this solution deliver to [Customer Type]?"**
-Review the `value_drivers` array. For each driver, read `description` and `driver_impact` (if present) for narrative context. Note the `category` and `subcategory`. Summarize the drivers that are most likely to apply based on the customer type's characteristics.
+Review the `value_drivers` array. For each driver, read `description` and `customer_criteria` to understand what value it delivers and who it applies to. Note the `category` and `subcategory`. Summarize the drivers that are most likely to apply based on the customer type's characteristics.
 
 **"Which drivers apply to [Tier/Module X]?"**
 Find the tier or module name in `tiers_and_modules`. Find all drivers where `tiers_or_modules` contains that name, or where `tiers_or_modules` is empty (applies to all).
@@ -201,7 +203,7 @@ Group drivers by `continuity_profile.mode`. Sum attributed values separately for
 Read `key_category_metric` for the metric name. Evaluate `key_category_metric_equation` with the customer's variable values for the target number.
 
 **"Is this driver applicable to a customer with [characteristic]?"**
-Read `customer_criteria` (if present as an extension field) for explicit criteria. If absent, use the variable descriptions and `description` field to assess whether the customer's situation matches the driver's assumptions.
+Read `customer_criteria` — this field is required on every driver and states in plain language who the driver applies to. Use it as the primary applicability check before evaluating the equation. If edge cases remain unclear, also consult the driver `description` and the variable `description` fields.
 
 ---
 

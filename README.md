@@ -61,6 +61,7 @@ ValueModel
 │   ├── name                  Unique driver name (referenced by CustomerVariables.value_drivers[].name)
 │   ├── equation              JavaScript expression → economic impact in currency
 │   ├── description           Plain-language explanation of value created
+│   ├── customer_criteria     Who this driver applies to — buyer self-assessment
 │   ├── variables_used[]      Variable names used in the equation
 │   ├── continuity_profile    one_time or recurring (decay rate + time horizon)
 │   ├── tiers_or_modules[]    Tiers/modules that unlock this driver
