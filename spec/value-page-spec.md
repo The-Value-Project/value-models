@@ -3,7 +3,7 @@ license: "CC-BY-4.0"
 license_url: "https://creativecommons.org/licenses/by/4.0/"
 license_full_text: "LICENSE-DOCS"
 copyright: "Copyright 2026 The Value Project (an initiative by ValueIQ — https://valueiq.ai)"
-version: "1.1.0"
+version: "1.2.0"
 repo: "https://github.com/The-Value-Project/value-models"
 related_schema: "https://github.com/The-Value-Project/value-models/blob/main/schemas/value_model.json"
 related_llm_reference: "https://github.com/The-Value-Project/value-models/blob/main/spec/value-model-llm-reference.md"
@@ -67,7 +67,7 @@ segment: <target customer segment, if model is segment-specific>
 contact: <contact email or URL for value discussions>
 ```
 
-Note: `benchmark_claims_ref` is required when the model contains any `Improvement Claim` variables.
+Note: `benchmark_claims_ref` is required when the model contains any `Improvement Claim` variables and a canonical URL has been set. If no URL has been set, omit the field entirely — do not write a placeholder string, as an LLM reading the page will attempt to fetch whatever value appears there.
 
 ### 2. Page Title
 
@@ -116,17 +116,26 @@ For variables with a dependency (i.e. they appear in `dependencies`), add a note
 
 Descriptions MUST be concise (≤15 words) while preserving the core meaning and any how-to-source guidance. The variable `name` (machine identifier) is not shown in this table — it appears in the ValueModel JSON block.
 
-This table is the primary human-checkable artifact for the variable set. Reviewers should verify that every variable listed here makes sense for the stated solution and customer type, and that `Improvement Claim` values are defensible.
+This table allows a buyer to understand what inputs drive the value calculation and where each input comes from.
+
+*Category key: **Customer Variable** — specific to this buyer's organisation; **Market Variable** — industry-wide benchmark; **Improvement Claim** — vendor's asserted performance improvement; **Solution Variable** — fixed property of the product.*
+
+Buyers should pay particular attention to `Improvement Claim` variables — these are the vendor's performance assertions and should be verified against the Improvement Claim Benchmarks section.
 
 #### 4c. Value Drivers
 
-A summary table listing every value driver, one row per driver:
+One entry per value driver, in array order. Publishers may choose any presentation format (table, list, card, structured prose) suited to their rendering context. Regardless of format, each driver entry MUST convey the following information to a buyer:
 
-| # | Name | Category | Applies to | Impact | Key Metric | Applies to customers who |
-|---|------|----------|------------|--------|------------|-------------------------|
-| [number] | [name] | [category] / [subcategory] | [tiers_or_modules joined by ", ", or "All configurations" if empty] | [One-time or Recurring[, N yr][, X% decay]] | [key_category_metric] | [customer_criteria] |
+| Field | Source | What a buyer needs to know |
+|-------|--------|---------------------------|
+| Number and name | `number`, `name` | Which driver this is and what it addresses |
+| Category | `category` / `subcategory` | The type of value this driver delivers |
+| Requires | `tiers_or_modules`; "All configurations" if empty | Which product tier or module must be purchased to realise this driver |
+| Impact | `continuity_profile.mode`; include time horizon and decay rate if present | Whether value is delivered once or recurs over time |
+| Key metric | `key_category_metric` | What a buyer would measure post-purchase to verify this value |
+| Applies to customers who | `customer_criteria` rewritten for buyer audience | The customer conditions under which this driver applies. Lead with a self-qualification question or condition a buyer can answer immediately. State the condition once in plain language. Omit seller process instructions ("a seller can confirm by asking...") and repetition. 2–3 sentences maximum. |
 
-This table allows a human reviewer to verify at a glance: the complete set of drivers, their category grouping, which tiers or modules each applies to, whether the impact is one-time or recurring, the key tracking metric, and who each driver applies to. Full driver detail (equations, descriptions, variables used) is available in the ValueModel JSON block.
+A buyer reading this section should be able to determine: the full set of value drivers the product offers, which module or tier each requires, whether each driver is one-time or recurring, what to track after purchase, and whether each driver applies to their specific situation.
 
 #### 4d. Improvement Claim Benchmarks
 
@@ -148,19 +157,24 @@ The `basis` field indicates the evidentiary foundation for the claim:
 | `analyst_estimate` | Analyst or advisory firm projection |
 | `vendor_estimate` | Vendor's own informed estimate |
 
-This table is the primary human-checkable artifact for vendor claims. Reviewers should verify that median values are defensible, that the range reflects real-world variation, and that the basis classification is accurate. Claims with basis `vendor_estimate` warrant particular scrutiny.
+This table allows a buyer to evaluate the vendor's improvement claims. The median is the typical outcome to expect; min and max show the range across different customer conditions.
+
+*Basis key: **customer_data** — measured across actual customers; **third_party_research** — published external research; **internal_testing** — controlled vendor benchmarks; **analyst_estimate** — analyst projection; **vendor_estimate** — vendor's informed estimate (treat with most scrutiny).*
 
 #### 4e. Tiers and Modules
 
-If `tiers_and_modules` is present, a table:
+If `tiers_and_modules` is present, one entry per tier or module. Publishers may choose any presentation format. Each entry MUST convey:
 
-| Name | Type | Description | Includes |
-|------|------|-------------|---------|
-| [name] | Tier / Module | [description] | [includes joined by ", ", or —] |
+| Field | What a buyer needs to know |
+|-------|---------------------------|
+| Name | The tier or module name |
+| Type | Whether this is a subscription tier or an add-on module |
+| Description | What this tier or module includes or enables |
+| Includes | Which other tiers or modules are bundled within it, if any |
 
 ---
 
-### 5. BenchmarkClaims JSON Block
+### 5. Improvement Claim Benchmarks JSON Block
 
 The complete, valid `BenchmarkClaims` JSON instance for this model, fenced with the `json` language identifier. Required when `benchmark_claims_ref` is present in the front matter.
 
@@ -252,10 +266,7 @@ any scope limitations]
 
 ## Value Drivers
 
-| # | Name | Category | Applies to | Impact | Key Metric | Applies to customers who |
-|---|------|----------|------------|--------|------------|-------------------------|
-| 1 | [Driver Name] | [category] / [subcategory] | [tiers or "All configurations"] | [One-time or Recurring] | [key_category_metric] | [customer_criteria] |
-| 2 | [Driver Name] | ... | ... | ... | ... | ... |
+[One entry per driver conveying: number, name, category/subcategory, requires, impact, key metric, and who it applies to. Format at publisher's discretion.]
 
 ## Improvement Claim Benchmarks
 
@@ -265,9 +276,7 @@ any scope limitations]
 
 ## Tiers and Modules
 
-| Name | Type | Description | Includes |
-|------|------|-------------|---------|
-| ...  | ...  | ...         | ...     |
+[One entry per tier or module conveying: name, type (tier or module), description, and what it includes. Format at publisher's discretion.]
 
 ## Value Model
 
@@ -297,7 +306,7 @@ A value model page conforms to this specification if:
 - [ ] All required human description subsections are present
 - [ ] Every variable in the JSON appears in the Variables table, identified by display name
 - [ ] Variable descriptions in the table are ≤15 words
-- [ ] Every value driver in the JSON has a row in the Value Drivers table with all columns including `customer_criteria`
+- [ ] Every value driver in the JSON has an entry in Value Drivers conveying all six required fields: name, category, requires, impact, key metric, and applies to customers who (rewritten for buyer audience)
 - [ ] The JSON block contains a complete, valid `ValueModel` instance
 - [ ] All variable name cross-references within the JSON resolve correctly
 - [ ] All `tiers_or_modules` references resolve to `tiers_and_modules` entries

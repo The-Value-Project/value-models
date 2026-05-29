@@ -14,6 +14,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Version
 
 ---
 
+## [1.2.0] — 2026-05-29
+
+### Changed — `spec/value-page-spec.md` v1.1.0 → v1.2.0
+
+License: CC BY 4.0
+
+- **Value Drivers section (4c)** — replaced format-mandating table with a format-agnostic content requirements table. Publishers may now use any presentation format (table, list, card, structured prose). Six required fields per driver entry are specified by source field and buyer information need rather than by layout.
+- **`customer_criteria` rendering** — "Applies to customers who" field must now be rewritten for a buyer audience rather than reproduced verbatim from the JSON. Required: lead with a self-qualification question or condition, state the condition once in plain language, omit seller process instructions ("a seller can confirm by asking..."), maximum 2–3 sentences. Previously: verbatim reproduction of the `customer_criteria` field.
+- **Tiers and Modules section (4e)** — replaced format-mandating table with a format-agnostic content requirements table. Same rationale as Value Drivers.
+- **Section heading** — "BenchmarkClaims JSON Block" renamed to "Improvement Claim Benchmarks JSON Block" for consistency with the preceding table section heading.
+- **Template** — Value Drivers and Tiers and Modules template entries updated to format-agnostic placeholders.
+- **Conformance checklist** — Value Drivers check updated to require all six content fields and buyer-audience rewrite of `customer_criteria`.
+
+### Added — `spec/value-page-spec.md` v1.2.0
+
+- **Category key** — inline legend added below the Variables table defining the four variable category values (Customer Variable, Market Variable, Improvement Claim, Solution Variable) in plain buyer language.
+- **Basis key** — inline legend added below the Improvement Claim Benchmarks table defining the five basis values and explaining how a buyer should weight each when evaluating claims.
+- **`benchmark_claims_ref` omit-if-unset rule** — front matter note clarified: if no canonical URL has been set, omit the field entirely. Do not write a placeholder string — an LLM reading the page will attempt to fetch whatever value appears there.
+
+---
 ## [1.0.0] — 2026-05-07
 
 ### Added — Repository structure
